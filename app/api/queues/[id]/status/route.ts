@@ -1,0 +1,118 @@
+import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
+import { requireAuth } from "@/lib/auth";
+import { logAudit } from "@/lib/audit";
+import { normalizeQueueOrdersForDate } from "@/lib/reorder";
+import { requireShop } from "@/lib/tenancy";
+
+const VALID_STATUSES = ["waiting", "in_progress", "completed", "cancelled"] as const;
+
+export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  try {
+    const { id } = await params;
+
+    let body: any;
+    try {
+      body = await req.json();
+    } catch {
+      return NextResponse.json({ error: "รูปแบบ JSON ไม่ถูกต้อง" }, { status: 400 });
+    }
+
+    const { status, note } = body || {};
+
+    if (!status || !VALID_STATUSES.includes(status)) {
+      return NextResponse.json(
+        { error: `สถานะ '${status}' ไม่ถูกต้อง สถานะที่อนุญาต: ${VALID_STATUSES.join(", ")}` },
+        { status: 400 }
+      );
+    }
+
+    if (note !== undefined && note !== null && typeof note !== "string") {
+      return NextResponse.json({ error: "หมายเหตุต้องเป็นข้อความสตริง" }, { status: 400 });
+    }
+
+    // Check permission: if status is cancelled, requires cancel_queue; otherwise change_status
+    const requiredPerm = status === "cancelled" ? "cancel_queue" : "change_status";
+    const { user } = await requireAuth(requiredPerm, req);
+    const shop = await requireShop(user.id);
+
+    const existing = await prisma.queue.findUnique({
+      where: { id, shopId: shop.id },
+    });
+
+    if (!existing) {
+      return NextResponse.json({ error: "ไม่พบคิวที่ต้องการเปลี่ยนสถานะ" }, { status: 404 });
+    }
+
+    if (existing.status === status) {
+      return NextResponse.json({ success: true, queue: existing });
+    }
+
+    const dataToUpdate: any = {
+      status,
+    };
+
+    if (status === "completed") {
+      dataToUpdate.completedAt = new Date();
+      dataToUpdate.cancelledAt = null;
+    } else if (status === "cancelled") {
+      dataToUpdate.cancelledAt = new Date();
+      dataToUpdate.completedAt = null;
+    } else {
+      // Re-activated to waiting or in_progress
+      dataToUpdate.completedAt = null;
+      dataToUpdate.cancelledAt = null;
+
+      // If was previously completed or cancelled, put at end of active queue
+      if (["completed", "cancelled"].includes(existing.status)) {
+        const maxOrder = await prisma.queue.findFirst({
+          where: {
+            shopId: shop.id,
+            queueDate: existing.queueDate,
+            status: { in: ["waiting", "in_progress"] },
+          },
+          orderBy: { queueOrder: "desc" },
+        });
+        dataToUpdate.queueOrder = (maxOrder?.queueOrder ?? 0) + 1;
+      }
+    }
+
+    if (note && typeof note === "string" && note.trim() !== "") {
+      const cleanNote = note.trim();
+      dataToUpdate.internalNote = existing.internalNote
+        ? `${existing.internalNote}\n[${new Date().toLocaleTimeString("th-TH")}] ${cleanNote}`
+        : cleanNote;
+    }
+
+    const updated = await prisma.queue.update({
+      where: { id, shopId: shop.id },
+      data: dataToUpdate,
+    });
+
+    // Re-normalize active orders
+    await normalizeQueueOrdersForDate(existing.queueDate, shop.id);
+
+    // Audit Log
+    await logAudit({
+      actorId: user.id,
+      actorName: user.displayName,
+      action: "CHANGE_STATUS",
+      entityType: "queue",
+      entityId: id,
+      oldValues: { status: existing.status },
+      newValues: { status: updated.status },
+      details: `เปลี่ยนสถานะคิว ${existing.queueNumber} จาก "${existing.status}" เป็น "${status}"${note ? ` (หมายเหตุ: ${note})` : ""}`,
+    });
+
+    return NextResponse.json({ success: true, queue: updated });
+  } catch (error: any) {
+    if (error.message === "UNAUTHORIZED") {
+      return NextResponse.json({ error: "กรุณาเข้าสู่ระบบก่อนทำรายการ" }, { status: 401 });
+    }
+    if (error.message === "FORBIDDEN") {
+      return NextResponse.json({ error: "คุณไม่มีสิทธิ์ในการเปลี่ยนสถานะคิวนี้" }, { status: 403 });
+    }
+    console.error("Change queue status error:", error);
+    return NextResponse.json({ error: "เกิดข้อผิดพลาดในการเปลี่ยนสถานะ" }, { status: 500 });
+  }
+}

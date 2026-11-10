@@ -1,0 +1,30 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "sunfzenith-queue-saas",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2026-11-08",
+  "compatibility_flags": [
+    "nodejs_compat"
+  ],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "vars": {
+    "NEXT_PUBLIC_SHOP_NAME": "SUNFZENITH Queue SaaS"
+  }
+  // CRITICAL SECRETS NOTICE:
+  // Secrets must NEVER be committed to this file or source control.
+  // Set them securely in Cloudflare using the Wrangler CLI:
+  //   npx wrangler secret put DATABASE_URL
+  //   npx wrangler secret put JWT_SECRET
+  //
+  // OPTIONAL HYPERDRIVE INTEGRATION (requires Cloudflare Workers Paid plan):
+  // If you configure Hyperdrive for Neon connection pooling, add:
+  // "hyperdrive": [
+  //   {
+  //     "binding": "HYPERDRIVE",
+  //     "id": "<your-hyperdrive-id>"
+  //   }
+  // ]
+}

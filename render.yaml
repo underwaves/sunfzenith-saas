@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: sunfzenith-queue-saas
+    runtime: node
+    plan: free
+    region: singapore
+    buildCommand: npm install --include=dev && npm run build
+    startCommand: npx prisma db push --skip-generate && npm run start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: JWT_SECRET
+        generateValue: true
+      - key: NEXT_PUBLIC_SHOP_NAME
+        value: "SUNFZENITH Queue SaaS"
+      - key: DATABASE_URL
+        sync: false

@@ -1,0 +1,274 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
+}
+
+model Profile {
+  id              String            @id @default(uuid())
+  email           String            @unique
+  displayName     String
+  passwordHash    String
+  role            String            @default("admin") // "owner" | "admin"
+  isActive        Boolean           @default(true)
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  permissions     AdminPermission[]
+  createdQueues   Queue[]           @relation("QueueCreator")
+  assignedQueues  Queue[]           @relation("QueueAssignee")
+  auditLogs       AuditLog[]
+  sessions        Session[]
+  ownedShops      Shop[]            @relation("ShopOwner")
+  shopMemberships ShopMember[]
+  bookings        Booking[]
+
+  @@map("profiles")
+}
+
+model Session {
+  id        String    @id @default(uuid())
+  userId    String
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+  user      Profile   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("sessions")
+}
+
+model AdminPermission {
+  id            String   @id @default(uuid())
+  userId        String
+  permissionKey String
+  grantedBy     String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  user          Profile  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, permissionKey])
+  @@index([userId])
+  @@map("admin_permissions")
+}
+
+model Queue {
+  id            String    @id @default(uuid())
+  queueNumber   String    @unique
+  queueDate     String // Format: YYYY-MM-DD
+  queueOrder    Int // Order index within the date
+  nickname      String
+  packageName   String
+  questionCount Int       @default(1)
+  details       String?
+  internalNote  String?
+  status        String    @default("waiting") // "waiting" | "in_progress" | "completed" | "cancelled"
+  createdBy     String
+  assignedTo    String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  completedAt   DateTime?
+  cancelledAt   DateTime?
+  archivedAt    DateTime?
+  shopId        String?
+
+  creator  Profile              @relation("QueueCreator", fields: [createdBy], references: [id])
+  assignee Profile?             @relation("QueueAssignee", fields: [assignedTo], references: [id])
+  tokens   QueueTrackingToken[]
+  shop     Shop?                @relation(fields: [shopId], references: [id], onDelete: Cascade)
+
+  @@index([queueDate, status])
+  @@index([queueOrder])
+  @@index([nickname])
+  @@index([queueNumber])
+  @@index([shopId, queueDate, status])
+  @@map("queues")
+}
+
+model QueueTrackingToken {
+  id        String    @id @default(uuid())
+  queueId   String
+  tokenHash String    @unique
+  token     String?
+  createdBy String
+  createdAt DateTime  @default(now())
+  expiresAt DateTime?
+  revokedAt DateTime?
+  queue     Queue     @relation(fields: [queueId], references: [id], onDelete: Cascade)
+
+  @@index([tokenHash])
+  @@index([queueId])
+  @@map("queue_tracking_tokens")
+}
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  actorId    String?
+  actorName  String?
+  action     String
+  entityType String
+  entityId   String
+  oldValues  String? // JSON string
+  newValues  String? // JSON string
+  details    String?
+  createdAt  DateTime @default(now())
+
+  actor Profile? @relation(fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([entityType, entityId])
+  @@index([actorId])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+model QueueSequence {
+  sequenceDate String @id // Format: YYYYMMDD
+  lastNumber   Int    @default(0)
+
+  @@map("queue_sequences")
+}
+
+model Shop {
+  id            String         @id @default(uuid())
+  ownerId       String
+  name          String
+  slug          String         @unique
+  description   String?
+  logoUrl       String?
+  phone         String?
+  email         String?
+  timezone      String         @default("Asia/Bangkok")
+  isActive      Boolean        @default(true)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  owner         Profile        @relation("ShopOwner", fields: [ownerId], references: [id], onDelete: Restrict)
+  members       ShopMember[]
+  services      Service[]
+  bookings      Booking[]
+  queues        Queue[]
+  subscription  Subscription?
+  hours         BusinessHour[]
+  queueCounters QueueCounter[]
+
+  @@index([ownerId])
+  @@index([isActive])
+  @@map("shops")
+}
+
+model ShopMember {
+  id        String   @id @default(uuid())
+  shopId    String
+  userId    String
+  role      String   @default("SHOP_STAFF")
+  createdAt DateTime @default(now())
+  shop      Shop     @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  user      Profile  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([shopId, userId])
+  @@index([userId, role])
+  @@map("shop_members")
+}
+
+model Plan {
+  id            String         @id @default(uuid())
+  code          String         @unique
+  name          String
+  monthlyPrice  Int
+  serviceLimit  Int?
+  bookingLimit  Int?
+  staffLimit    Int?
+  features      String         @default("[]")
+  isActive      Boolean        @default(true)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  subscriptions Subscription[]
+
+  @@map("plans")
+}
+
+model Subscription {
+  id        String    @id @default(uuid())
+  shopId    String    @unique
+  planId    String
+  status    String    @default("active")
+  startsAt  DateTime  @default(now())
+  expiresAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  shop      Shop      @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  plan      Plan      @relation(fields: [planId], references: [id], onDelete: Restrict)
+
+  @@index([status, expiresAt])
+  @@map("subscriptions")
+}
+
+model Service {
+  id           String    @id @default(uuid())
+  shopId       String
+  name         String
+  description  String?
+  durationMins Int       @default(30)
+  price        Int       @default(0)
+  isActive     Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  shop         Shop      @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  bookings     Booking[]
+
+  @@unique([shopId, name])
+  @@index([shopId, isActive])
+  @@map("services")
+}
+
+model Booking {
+  id            String   @id @default(uuid())
+  shopId        String
+  serviceId     String
+  createdById   String?
+  customerName  String
+  customerEmail String?
+  customerPhone String?
+  startsAt      DateTime
+  endsAt        DateTime
+  status        String   @default("confirmed")
+  mode          String   @default("appointment")
+  ticketNumber  String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  shop          Shop     @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  service       Service  @relation(fields: [serviceId], references: [id], onDelete: Restrict)
+  createdBy     Profile? @relation(fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@unique([shopId, ticketNumber])
+  @@index([shopId, startsAt, status])
+  @@index([serviceId, startsAt, status])
+  @@map("bookings")
+}
+
+model BusinessHour {
+  id       String  @id @default(uuid())
+  shopId   String
+  weekday  Int
+  opensAt  String
+  closesAt String
+  isClosed Boolean @default(false)
+  shop     Shop    @relation(fields: [shopId], references: [id], onDelete: Cascade)
+
+  @@unique([shopId, weekday])
+  @@map("business_hours")
+}
+
+model QueueCounter {
+  id         String @id @default(uuid())
+  shopId     String
+  queueDate  String
+  lastNumber Int    @default(0)
+  shop       Shop   @relation(fields: [shopId], references: [id], onDelete: Cascade)
+
+  @@unique([shopId, queueDate])
+  @@map("queue_counters")
+}

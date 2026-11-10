@@ -1,0 +1,246 @@
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root,
+[data-theme="pastel-magic"] {
+  --font-thai: 'IBM Plex Sans Thai', sans-serif;
+  --font-magic: 'Cinzel', serif;
+  --pastel-lavender: 217 199 255; /* #D9C7FF */
+  --pastel-purple: 185 160 245;   /* #B9A0F5 */
+  --pastel-pink: 255 217 232;     /* #FFD9E8 */
+  --pastel-babypink: 255 240 246; /* #FFF0F6 */
+  --pastel-milky: 255 252 255;    /* #FFFCFF */
+  --pastel-deep: 101 80 128;      /* #655080 */
+  --pastel-blue: 220 235 255;     /* #DCEBFF */
+  --pastel-yellow: 255 241 184;   /* #FFF1B8 */
+  --pastel-green: 216 245 229;    /* #D8F5E5 */
+  --bg-base: #FFFDFC;
+  --text-base: #4A3E56;
+  --btn-text: #432C66;
+}
+
+[data-theme="matcha-cafe"] {
+  --pastel-lavender: 198 230 208; /* #C6E6D0 */
+  --pastel-purple: 120 184 144;   /* #78B890 */
+  --pastel-pink: 247 223 198;     /* #F7DFC6 */
+  --pastel-babypink: 244 249 245; /* #F4F9F5 */
+  --pastel-milky: 252 253 251;    /* #FCFDFB */
+  --pastel-deep: 46 71 56;        /* #2E4738 */
+  --pastel-blue: 214 236 247;     /* #D6ECF7 */
+  --pastel-yellow: 253 240 194;   /* #FDF0C2 */
+  --pastel-green: 210 244 224;    /* #D2F4E0 */
+  --bg-base: #FBFDF9;
+  --text-base: #2E4738;
+  --btn-text: #1E3528;
+}
+
+[data-theme="ocean-clinic"] {
+  --pastel-lavender: 194 224 255; /* #C2E0FF */
+  --pastel-purple: 122 184 245;   /* #7AB8F5 */
+  --pastel-pink: 214 240 255;     /* #D6F0FF */
+  --pastel-babypink: 240 248 255; /* #F0F8FF */
+  --pastel-milky: 250 253 255;    /* #FAFDFF */
+  --pastel-deep: 40 64 92;        /* #28405C */
+  --pastel-blue: 212 235 255;     /* #D4EBFF */
+  --pastel-yellow: 255 243 196;   /* #FFF3C4 */
+  --pastel-green: 213 245 227;    /* #D5F5E3 */
+  --bg-base: #F9FCFF;
+  --text-base: #28405C;
+  --btn-text: #1B324D;
+}
+
+[data-theme="peach-salon"] {
+  --pastel-lavender: 255 209 201; /* #FFD1C9 */
+  --pastel-purple: 244 157 142;   /* #F49D8E */
+  --pastel-pink: 255 227 216;     /* #FFE3D8 */
+  --pastel-babypink: 255 245 242; /* #FFF5F2 */
+  --pastel-milky: 255 252 250;    /* #FFFCFA */
+  --pastel-deep: 92 55 50;        /* #5C3732 */
+  --pastel-blue: 220 235 255;     /* #DCEBFF */
+  --pastel-yellow: 255 242 194;   /* #FFF2C2 */
+  --pastel-green: 216 245 229;    /* #D8F5E5 */
+  --bg-base: #FFFDFB;
+  --text-base: #5C3732;
+  --btn-text: #4A2823;
+}
+
+[data-theme="minimal-mono"] {
+  --pastel-lavender: 216 222 233; /* #D8DEE9 */
+  --pastel-purple: 148 163 184;   /* #94A3B8 */
+  --pastel-pink: 226 232 240;     /* #E2E8F0 */
+  --pastel-babypink: 248 250 252; /* #F8FAFC */
+  --pastel-milky: 255 255 255;    /* #FFFFFF */
+  --pastel-deep: 30 41 59;        /* #1E293B */
+  --pastel-blue: 219 234 254;     /* #DBEAFE */
+  --pastel-yellow: 254 243 199;   /* #FEF3C7 */
+  --pastel-green: 209 250 229;    /* #D1FAE5 */
+  --bg-base: #FBFDFE;
+  --text-base: #1E293B;
+  --btn-text: #0F172A;
+}
+
+body {
+  font-family: var(--font-thai);
+  background-color: var(--bg-base, #FFFDFC);
+  color: var(--text-base, #4A3E56);
+  min-height: 100vh;
+  overflow-x: hidden;
+  background-image: 
+    radial-gradient(circle at 10% 20%, rgb(var(--pastel-lavender) / 0.25) 0%, transparent 40%),
+    radial-gradient(circle at 90% 10%, rgb(var(--pastel-pink) / 0.25) 0%, transparent 40%),
+    radial-gradient(circle at 50% 80%, rgb(var(--pastel-blue) / 0.2) 0%, transparent 50%);
+  background-attachment: fixed;
+}
+
+/* Glassmorphism Cards */
+.pastel-card {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgb(var(--pastel-lavender) / 0.45);
+  box-shadow: 0 10px 30px -10px rgb(var(--pastel-purple) / 0.15);
+  border-radius: 1.25rem;
+}
+
+.pastel-card-subtle {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgb(var(--pastel-pink) / 0.45);
+  border-radius: 1rem;
+}
+
+/* Magical borders and glowing */
+.magical-glow {
+  box-shadow: 0 0 20px rgb(var(--pastel-lavender) / 0.45);
+}
+
+.magical-border {
+  border: 1px solid transparent;
+  background-image: linear-gradient(rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.95)),
+    linear-gradient(135deg, rgb(var(--pastel-purple)), rgb(var(--pastel-pink)), rgb(var(--pastel-blue)));
+  background-origin: border-box;
+  background-clip: padding-box, border-box;
+}
+
+/* Custom button styles */
+.btn-magical {
+  background: linear-gradient(
+    135deg,
+    rgb(var(--pastel-purple)) 0%,
+    rgb(var(--pastel-lavender)) 50%,
+    rgb(var(--pastel-pink)) 100%
+  );
+  color: var(--btn-text, #432C66);
+  font-weight: 600;
+  border-radius: 0.875rem;
+  box-shadow: 0 4px 15px rgb(var(--pastel-purple) / 0.35);
+  transition: all 0.25s ease;
+}
+
+.btn-magical:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgb(var(--pastel-purple) / 0.45);
+  filter: brightness(1.03);
+}
+
+.btn-magical:active {
+  transform: translateY(0);
+}
+
+.btn-magical:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ------------------------------------------------------------------ */
+/* Cute UI kit – shared building blocks for the SaaS-facing pages      */
+/* ------------------------------------------------------------------ */
+@layer components {
+  .text-gradient {
+    background-image: linear-gradient(120deg, rgb(var(--pastel-deep)) 0%, rgb(var(--pastel-purple)) 55%, #f08cb4 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .glass-nav {
+    @apply sticky top-0 z-40 border-b border-white/60 bg-white/70 backdrop-blur-xl;
+  }
+
+  .cute-chip {
+    @apply inline-flex items-center gap-1.5 rounded-full border border-pastel-lavender/70 bg-white/80 px-3 py-1 text-xs font-semibold text-pastel-deep shadow-sm;
+  }
+
+  .cute-label {
+    @apply mb-1.5 flex items-center justify-between text-sm font-semibold text-pastel-deep;
+  }
+
+  .cute-input {
+    @apply w-full rounded-2xl border border-pastel-lavender/70 bg-white/80 px-4 py-3 text-sm text-pastel-deep shadow-sm outline-none transition placeholder:text-gray-400 hover:border-pastel-purple/60 focus:border-pastel-purple focus:bg-white focus:ring-4 focus:ring-pastel-lavender/50;
+  }
+
+  .btn-cute {
+    /* use together with .btn-magical */
+    @apply inline-flex items-center justify-center gap-2 px-5 py-3 text-sm;
+  }
+
+  .btn-soft {
+    @apply inline-flex items-center justify-center gap-2 rounded-[0.875rem] border border-pastel-lavender/80 bg-white/80 px-5 py-3 text-sm font-semibold text-pastel-deep shadow-sm transition hover:-translate-y-0.5 hover:border-pastel-purple/70 hover:bg-white hover:shadow-md;
+  }
+
+  .icon-bubble {
+    @apply grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-pastel-lavender/70 to-pastel-pink/70 text-pastel-deep;
+  }
+
+  .cute-blob {
+    @apply pointer-events-none absolute rounded-full blur-3xl;
+  }
+}
+
+:focus-visible {
+  outline: 3px solid rgb(var(--pastel-purple) / 0.6);
+  outline-offset: 2px;
+  border-radius: 0.5rem;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-4px); }
+  40%, 80% { transform: translateX(4px); }
+}
+.animate-shake { animation: shake 0.4s ease-in-out; }
+
+@keyframes popIn {
+  0% { opacity: 0; transform: translateY(8px) scale(0.98); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+.animate-pop-in { animation: popIn 0.35s ease-out both; }
+
+/* Custom scrollbars */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: rgb(var(--pastel-babypink) / 0.5);
+}
+::-webkit-scrollbar-thumb {
+  background: rgb(var(--pastel-lavender));
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgb(var(--pastel-purple));
+}
+
+/* Reduce motion accessibility */
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
